@@ -22,7 +22,7 @@ project/
 - [x] Phase 1：認證系統（Register / Login API、JWT、ROLE_USER / ROLE_ADMIN、前端整合）
 - [x] Phase 2：商品與分類（Category + Product Entity/Service/Controller、公開與後台 CRUD、前台商品列表 & 詳細頁、後台商品管理 & 分類管理）
 - [x] Phase 3：購物車與訂單
-- [ ] Phase 4：新聞公告管理
+- [x] Phase 4：新聞公告管理（News Entity/Service/Controller、公開列表 & 全文彈窗、後台 CRUD 含草稿/置頂）
 - [ ] Phase 5：圖片上傳、結帳流程、報表
 
 ## Test Accounts
@@ -102,6 +102,19 @@ GRANT ALL PRIVILEGES ON DATABASE ecommerce_db TO ecommerce_user;
 - `GET /api/admin/orders`
 - `GET /api/admin/orders/{id}`
 - `PUT /api/admin/orders/{id}/status`
+
+### News APIs（公開，不需登入）
+
+- `GET /api/news` — 分頁取已發佈公告（置頂優先）
+- `GET /api/news/{id}` — 取得單篇已發佈公告
+
+### Admin News APIs（需 ROLE_ADMIN）
+
+- `GET    /api/admin/news` — 查詢所有公告（含草稿）
+- `GET    /api/admin/news/{id}` — 取得單篇
+- `POST   /api/admin/news` — 新增公告
+- `PUT    /api/admin/news/{id}` — 更新公告
+- `DELETE /api/admin/news/{id}` — 刪除公告
 
 ## API Summary
 
