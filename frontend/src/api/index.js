@@ -11,7 +11,7 @@ import router from '../router'
 
 // 建立 Axios 實例，baseURL 指向 Spring Boot 後端
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'http://localhost:7687/api',
   timeout: 10000, // 請求超時 10 秒
   headers: {
     'Content-Type': 'application/json'

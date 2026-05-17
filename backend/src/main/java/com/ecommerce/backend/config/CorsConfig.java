@@ -12,7 +12,7 @@ import java.util.List;
  * CORS（跨來源資源共用）設定
  *
  * 為什麼需要這個？
- * 前端跑在 localhost:5173，後端跑在 localhost:8080，
+ * 前端跑在 localhost:5173，後端跑在 localhost:7687，
  * 瀏覽器預設會阻擋不同 port 之間的 HTTP 請求（跨域）。
  * 這個設定就是告訴後端：「允許 localhost:5173 來的請求通過」。
  */

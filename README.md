@@ -21,7 +21,7 @@ project/
 
 - [x] Phase 1：認證系統（Register / Login API、JWT、ROLE_USER / ROLE_ADMIN、前端整合）
 - [x] Phase 2：商品與分類（Category + Product Entity/Service/Controller、公開與後台 CRUD、前台商品列表 & 詳細頁、後台商品管理 & 分類管理）
-- [ ] Phase 3：購物車與訂單
+- [x] Phase 3：購物車與訂單
 - [ ] Phase 4：新聞公告管理
 - [ ] Phase 5：圖片上傳、結帳流程、報表
 
@@ -46,10 +46,10 @@ cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Backend default URL: `http://localhost:8080`
+Backend default URL: `http://localhost:7687`
 
 Health Check API:
-- `GET http://localhost:8080/api/health`
+- `GET http://localhost:7687/api/health`
 
 ### 2. Start Frontend
 
@@ -81,6 +81,27 @@ CREATE USER ecommerce_user WITH PASSWORD 'ecommerce_pass';
 CREATE DATABASE ecommerce_db OWNER ecommerce_user;
 GRANT ALL PRIVILEGES ON DATABASE ecommerce_db TO ecommerce_user;
 ```
+
+### Cart APIs（需登入）
+
+- `GET /api/cart`
+- `POST /api/cart/items`
+- `PUT /api/cart/items/{id}`
+- `DELETE /api/cart/items/{id}`
+- `DELETE /api/cart`
+
+### Order APIs（需登入）
+
+- `POST /api/orders/checkout`
+- `GET /api/orders`
+- `GET /api/orders/{id}`
+- `POST /api/orders/{id}/cancel`
+
+### Admin Order APIs
+
+- `GET /api/admin/orders`
+- `GET /api/admin/orders/{id}`
+- `PUT /api/admin/orders/{id}/status`
 
 ## API Summary
 

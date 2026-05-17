@@ -12,7 +12,11 @@
           <router-link to="/products">商品</router-link>
           <router-link to="/news">最新消息</router-link>
           <template v-if="authStore.isLoggedIn">
-            <router-link to="/cart">購物車</router-link>
+            <router-link to="/cart">
+              <el-badge :value="cartStore.cartCount" :hidden="cartStore.cartCount === 0" type="danger">
+                購物車
+              </el-badge>
+            </router-link>
             <router-link to="/orders">我的訂單</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin">後台管理</router-link>
             <span class="nav-user">{{ authStore.username }}</span>
@@ -53,25 +57,31 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useCartStore } from '../../stores/cart'
 import api from '../../api'
 
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 const router = useRouter()
 const healthStatus = ref(null)
 const healthError = ref(null)
 
-// 頁面載入時，呼叫後端 Health Check API
 onMounted(async () => {
   try {
     const response = await api.get('/health')
     healthStatus.value = response.data
   } catch (error) {
-    healthError.value = '請確認後端是否已啟動 (localhost:8080)'
+    healthError.value = '請確認後端是否已啟動 (localhost:7687)'
+  }
+  // 若已登入，拉取購物車數量以顯示 Badge
+  if (authStore.isLoggedIn) {
+    cartStore.fetchCart()
   }
 })
 
 function handleLogout() {
   authStore.logout()
+  cartStore.reset()
   router.push('/')
 }
 </script>

@@ -31,7 +31,18 @@
             <p class="stock">庫存：{{ product.stock }}</p>
             <p class="desc">{{ product.description || '此商品目前沒有描述。' }}</p>
 
-            <el-button type="primary" disabled>加入購物車（下一階段）</el-button>
+            <div class="add-to-cart-row">
+              <el-input-number v-model="quantity" :min="1" :max="product.stock" size="large" />
+              <el-button
+                type="primary"
+                size="large"
+                :loading="addingToCart"
+                :disabled="product.stock === 0"
+                @click="handleAddToCart"
+              >
+                {{ product.stock === 0 ? '已售完' : '加入購物車' }}
+              </el-button>
+            </div>
           </el-col>
         </el-row>
       </template>
@@ -41,13 +52,20 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '../../stores/auth'
+import { useCartStore } from '../../stores/cart'
 import api from '../../api'
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const cartStore = useCartStore()
 const loading = ref(false)
 const product = ref(null)
+const quantity = ref(1)
+const addingToCart = ref(false)
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'
@@ -85,6 +103,23 @@ watch(
     fetchProduct(newId)
   }
 )
+
+async function handleAddToCart() {
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('請先登入才能加入購物車')
+    router.push('/login')
+    return
+  }
+  addingToCart.value = true
+  try {
+    await cartStore.addItem(product.value.id, quantity.value)
+    ElMessage.success(`已將「${product.value.name}」加入購物車`)
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || '加入購物車失敗')
+  } finally {
+    addingToCart.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -118,5 +153,12 @@ watch(
 .desc {
   margin: 10px 0;
   line-height: 1.6;
+}
+
+.add-to-cart-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
 }
 </style>
