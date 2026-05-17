@@ -40,6 +40,10 @@
           <el-icon><Bell /></el-icon>
           <span>最新消息</span>
         </el-menu-item>
+        <el-menu-item index="/admin/reviews">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>評論管理</span>
+        </el-menu-item>
       </el-menu>
 
       <!-- 回到前台按鈕 -->

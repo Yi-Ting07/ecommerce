@@ -71,6 +71,12 @@ const routes = [
     component: () => import('../views/customer/OrderDetail.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../views/customer/ProfilePage.vue'),
+    meta: { requiresAuth: true }
+  },
 
   // ========== 管理員後台路由 ==========
   {
@@ -108,6 +114,11 @@ const routes = [
         path: 'categories',
         name: 'AdminCategories',
         component: () => import('../views/admin/CategoryManage.vue')
+      },
+      {
+        path: 'reviews',
+        name: 'AdminReviews',
+        component: () => import('../views/admin/ReviewManage.vue')
       }
     ]
   }

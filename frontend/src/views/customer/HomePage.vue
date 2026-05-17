@@ -18,6 +18,7 @@
               </el-badge>
             </router-link>
             <router-link to="/orders">我的訂單</router-link>
+            <router-link to="/profile">個人中心</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin">後台管理</router-link>
             <span class="nav-user">{{ authStore.username }}</span>
             <el-button type="danger" size="small" @click="handleLogout">登出</el-button>

@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()  // 瀏覽商品
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll() // 瀏覽分類
                 .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()      // 瀏覽最新消息
+                .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll() // 商品評論（公開瀏覽）
                 .requestMatchers("/uploads/**").permitAll()      // 商品圖片
 
                 // 🔒 管理員專用 API
