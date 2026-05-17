@@ -221,12 +221,13 @@ async function handleCheckout() {
   }
   checkingOut.value = true
   try {
-    await api.post('/orders/checkout', {
+    const response = await api.post('/orders/checkout', {
       shippingAddress: shippingAddress.value.trim()
     })
     cartStore.reset()
-    ElMessage.success('結帳成功！訂單已建立')
-    router.push('/orders')
+    ElMessage.success('結帳成功！訂單已建立，正在跳轉至訂單詳情...')
+    // 結帳成功後直接跳轉到該筆訂單的詳情頁
+    router.push(`/orders/${response.data.id}`)
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '結帳失敗，請稍後再試')
   } finally {

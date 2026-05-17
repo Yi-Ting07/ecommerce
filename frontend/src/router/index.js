@@ -65,6 +65,12 @@ const routes = [
     component: () => import('../views/customer/OrderList.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/orders/:id',
+    name: 'OrderDetail',
+    component: () => import('../views/customer/OrderDetail.vue'),
+    meta: { requiresAuth: true }
+  },
 
   // ========== 管理員後台路由 ==========
   {

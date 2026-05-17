@@ -5,6 +5,10 @@ import com.ecommerce.backend.model.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
@@ -16,4 +20,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // 管理員查詢：所有訂單
     Page<Order> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    // ===== 儀表板統計用 =====
+
+    // 計算總營收（排除已取消的訂單）
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status <> 'CANCELLED'")
+    BigDecimal getTotalRevenue();
+
+    // 各訂單狀態的數量，回傳 Object[]{ OrderStatus, count }
+    @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
+    List<Object[]> countGroupByStatus();
 }

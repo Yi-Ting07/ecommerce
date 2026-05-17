@@ -23,7 +23,21 @@ project/
 - [x] Phase 2：商品與分類（Category + Product Entity/Service/Controller、公開與後台 CRUD、前台商品列表 & 詳細頁、後台商品管理 & 分類管理）
 - [x] Phase 3：購物車與訂單
 - [x] Phase 4：新聞公告管理（News Entity/Service/Controller、公開列表 & 全文彈窗、後台 CRUD 含草稿/置頂）
-- [ ] Phase 5：圖片上傳、結帳流程、報表
+- [x] Phase 5：圖片上傳、結帳流程強化、報表
+  - 圖片上傳：`POST /api/admin/upload`，儲存於 `backend/uploads/`，`/uploads/**` 公開存取
+  - 結帳強化：結帳成功後直接跳轉至訂單詳情頁 `/orders/:id`
+  - 訂單詳情頁：顧客可查看商品明細、收貨地址、訂單狀態，並在 PENDING 狀態取消訂單
+  - 後台儀表板：顯示真實統計（商品數、訂單數、會員數、總營收、各狀態訂單數）
+- [ ] Phase 6：會員個人中心 & 商品評論
+  - 顧客修改個人資料（暱稱、Email）& 更改密碼
+  - 商品評論 / 星評系統（Review Entity、顧客新增/刪除、前台商品詳情頁展示）
+  - 後台管理員可刪除不當評論
+- [ ] Phase 7：部署上線
+  - Docker Compose（後端 + PostgreSQL 容器化）
+  - 前端部署至 Vercel / Netlify（靜態 SPA）
+  - 後端部署至 Railway / Render（免費 PaaS）
+  - 設定生產環境 application-prod.properties（環境變數）
+  - GitHub Actions CI/CD 流程（自動測試 + 部署）
 
 ## Test Accounts
 
@@ -188,3 +202,22 @@ git push
   - Controller -> Service -> Repository -> Entity
 - Admin and customer routes are protected by router guards and backend security rules.
 - Product module supports search, category filter, pagination, and admin CRUD.
+- Image upload uses UUID-renamed files + MIME validation to prevent path traversal attacks.
+- Dashboard uses JPQL aggregate queries (`SUM`, `GROUP BY`) for real-time statistics.
+
+## Phase 5 新增 API
+
+### Upload API（需 ROLE_ADMIN）
+
+- `POST /api/admin/upload` — 上傳商品圖片（multipart/form-data，欄位名 `file`）
+  - 回應：`{ "url": "/uploads/uuid.ext" }`
+  - 限制：jpg / png / webp，最大 5MB
+
+### Dashboard API（需 ROLE_ADMIN）
+
+- `GET /api/admin/dashboard/stats` — 取得儀表板統計數據
+
+### Order Detail（需登入）
+
+- `GET /api/orders/{id}` — 查詢單筆訂單詳情（前端新增 `/orders/:id` 頁面）
+

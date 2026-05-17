@@ -99,8 +99,48 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="圖片網址" prop="imageUrl">
-          <el-input v-model="form.imageUrl" placeholder="https://..." />
+        <el-form-item label="商品圖片">
+          <!-- 圖片上傳區塊 -->
+          <div class="image-upload-area">
+            <!-- 預覽目前圖片 -->
+            <div v-if="form.imageUrl" class="image-preview">
+              <img :src="resolveImageUrl(form.imageUrl)" alt="商品圖片" class="preview-img" />
+              <el-button
+                type="danger"
+                size="small"
+                circle
+                class="remove-img-btn"
+                @click="form.imageUrl = ''"
+              >✕</el-button>
+            </div>
+
+            <!-- 上傳按鈕（僅在沒有圖片時顯示） -->
+            <el-upload
+              v-if="!form.imageUrl"
+              class="upload-trigger"
+              :show-file-list="false"
+              :before-upload="handleImageUpload"
+              accept="image/jpeg,image/png,image/webp"
+            >
+              <div class="upload-placeholder">
+                <el-icon class="upload-icon"><Plus /></el-icon>
+                <div class="upload-text">點擊上傳圖片</div>
+                <div class="upload-hint">JPG / PNG / WebP，最大 5MB</div>
+                <el-icon v-if="uploadingImage" class="loading-icon"><Loading /></el-icon>
+              </div>
+            </el-upload>
+          </div>
+
+          <!-- 或輸入圖片網址 -->
+          <div class="url-input-wrap">
+            <span class="url-label">或輸入圖片網址：</span>
+            <el-input
+              v-model="form.imageUrl"
+              placeholder="https://example.com/image.jpg"
+              clearable
+              style="flex: 1"
+            />
+          </div>
         </el-form-item>
 
         <el-form-item label="商品狀態">
@@ -127,6 +167,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Loading } from '@element-plus/icons-vue'
 import api from '../../api'
 
 const loading = ref(false)
@@ -134,6 +175,7 @@ const saving = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref(null)
 const formRef = ref(null)
+const uploadingImage = ref(false)
 
 const products = ref([])
 const categories = ref([])
@@ -327,6 +369,53 @@ async function removeProduct(product) {
   }
 }
 
+/**
+ * 解析圖片 URL
+ * - 若是 /uploads/ 開頭的相對路徑 → 補上後端 baseURL
+ * - 若已是完整 URL（http/https）→ 直接使用
+ */
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('/uploads/')) {
+    return 'http://localhost:7687' + url
+  }
+  return url
+}
+
+/**
+ * 圖片上傳處理（el-upload 的 before-upload hook）
+ * 回傳 false 可阻止 el-upload 自動上傳，改由我們自行控制
+ */
+async function handleImageUpload(file) {
+  // 驗證大小（5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('圖片大小不能超過 5MB')
+    return false
+  }
+
+  uploadingImage.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 呼叫後端上傳 API（注意：不用 JSON，要用 multipart/form-data）
+    const response = await api.post('/admin/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    // 將回傳的 URL 填入表單
+    form.imageUrl = response.data.url
+    ElMessage.success('圖片上傳成功')
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || '圖片上傳失敗')
+  } finally {
+    uploadingImage.value = false
+  }
+
+  // 回傳 false 阻止 el-upload 自動上傳（我們已手動處理）
+  return false
+}
+
 onMounted(async () => {
   await fetchCategories()
   await fetchProducts()
@@ -358,5 +447,88 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   margin-top: 12px;
+}
+
+/* ===== 圖片上傳區塊樣式 ===== */
+.image-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.preview-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #dcdfe6;
+}
+
+.remove-img-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0;
+  font-size: 11px;
+}
+
+.upload-trigger :deep(.el-upload) {
+  display: block;
+}
+
+.upload-placeholder {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #909399;
+  transition: border-color 0.2s;
+}
+
+.upload-placeholder:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.upload-text {
+  font-size: 13px;
+}
+
+.upload-hint {
+  font-size: 11px;
+  margin-top: 2px;
+  color: #c0c4cc;
+}
+
+.url-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.url-label {
+  white-space: nowrap;
+  font-size: 13px;
+  color: #606266;
 }
 </style>

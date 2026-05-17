@@ -80,16 +80,24 @@
             <span class="order-total-label">
               訂單總額：<strong class="total-price">{{ formatCurrency(order.totalAmount) }}</strong>
             </span>
-            <el-button
-              v-if="order.status === 'PENDING'"
-              type="danger"
-              plain
-              size="small"
-              :loading="cancellingId === order.id"
-              @click="handleCancel(order.id)"
-            >
-              取消訂單
-            </el-button>
+            <div class="order-actions">
+              <el-button
+                size="small"
+                @click="$router.push(`/orders/${order.id}`)"
+              >
+                查看詳情
+              </el-button>
+              <el-button
+                v-if="order.status === 'PENDING'"
+                type="danger"
+                plain
+                size="small"
+                :loading="cancellingId === order.id"
+                @click="handleCancel(order.id)"
+              >
+                取消訂單
+              </el-button>
+            </div>
           </div>
         </el-card>
 
@@ -233,6 +241,7 @@ onMounted(() => fetchOrders())
 .shipping-address { font-size: 13px; color: #909399; margin-top: 10px; display: flex; align-items: center; gap: 4px; }
 .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
 .order-total-label { font-size: 14px; }
+.order-actions { display: flex; gap: 8px; align-items: center; }
 .total-price { font-size: 18px; color: #e1251b; }
 .pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
 </style>
