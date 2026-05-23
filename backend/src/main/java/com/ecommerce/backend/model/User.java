@@ -42,6 +42,22 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    // ===== 雙重驗證（2FA）欄位 =====
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean twoFactorEnabled = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private TwoFactorMethod twoFactorMethod;
+
+    // TOTP 的 base32 密鑰（只有 TOTP 方式才有值）
+    @Column(length = 64)
+    private String twoFactorSecret;
+
+    // SMS 手機號碼（只有 SMS 方式才有值，格式：+886912345678）
+    @Column(length = 20)
+    private String smsPhone;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 }

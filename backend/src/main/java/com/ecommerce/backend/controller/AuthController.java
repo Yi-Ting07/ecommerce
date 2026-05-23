@@ -3,23 +3,30 @@ package com.ecommerce.backend.controller;
 import com.ecommerce.backend.dto.AuthLoginRequest;
 import com.ecommerce.backend.dto.AuthRegisterRequest;
 import com.ecommerce.backend.dto.AuthResponse;
+import com.ecommerce.backend.dto.CaptchaResponse;
 import com.ecommerce.backend.service.AuthService;
+import com.ecommerce.backend.service.CaptchaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
+    private final CaptchaService captchaService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, CaptchaService captchaService) {
         this.authService = authService;
+        this.captchaService = captchaService;
+    }
+
+    @GetMapping("/captcha")
+    public ResponseEntity<CaptchaResponse> getCaptcha() {
+        CaptchaService.CaptchaResult result = captchaService.generateCaptcha();
+        return ResponseEntity.ok(new CaptchaResponse(result.captchaId(), result.captchaImage()));
     }
 
     @PostMapping("/register")

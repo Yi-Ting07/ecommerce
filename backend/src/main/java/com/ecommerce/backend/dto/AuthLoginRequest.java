@@ -9,6 +9,10 @@ public record AuthLoginRequest(
         String email,
 
         @NotBlank(message = "密碼不能為空")
-        String password
+        String password,
+
+        String captchaId,
+
+        String captchaCode
 ) {
 }

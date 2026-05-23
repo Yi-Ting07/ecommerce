@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useCartStore } from './stores/cart'
@@ -38,6 +38,14 @@ const cartStore = useCartStore()
 
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 const isCartPage = computed(() => route.path === '/cart')
+
+// 監聽 Token 失效事件，清除 store reactive 狀態
+function handleAuthExpired() {
+  authStore.logout()
+}
+
+onMounted(() => window.addEventListener('auth:expired', handleAuthExpired))
+onUnmounted(() => window.removeEventListener('auth:expired', handleAuthExpired))
 </script>
 
 <style scoped>

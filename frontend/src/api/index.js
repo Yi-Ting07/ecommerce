@@ -45,10 +45,19 @@ api.interceptors.response.use(
   },
   (error) => {
     // 401 = Token 過期或無效 → 清除 Token 並跳轉登入頁
+    // 但登入/註冊等 auth 端點的 401 應讓下游 catch 處理（不攔截）
     if (error.response && error.response.status === 401) {
+      const requestUrl = error.config?.url || ''
+      if (requestUrl.includes('/auth/')) {
+        return Promise.reject(error)
+      }
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      // 通知 App.vue 清除 store 的 reactive 狀態
+      window.dispatchEvent(new Event('auth:expired'))
       router.push('/login')
+      // 回傳永不 resolve 的 Promise，阻止下游 catch block 顯示錯誤訊息
+      return new Promise(() => {})
     }
     return Promise.reject(error)
   }
