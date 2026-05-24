@@ -1,9 +1,8 @@
 <template>
-  <div class="product-list-page">
-    <div class="header-row">
-      <h1>商品列表</h1>
-      <router-link to="/">回首頁</router-link>
-    </div>
+  <div class="product-list-page-wrapper">
+    <NavBar />
+    <div class="product-list-page">
+    <h1>商品列表</h1>
 
     <el-card class="filter-card" shadow="never">
       <el-form :inline="true" @submit.prevent>
@@ -75,6 +74,7 @@
         </div>
       </template>
     </el-skeleton>
+    </div>
   </div>
 </template>
 
@@ -83,6 +83,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
+import NavBar from '../../components/NavBar.vue'
 
 const router = useRouter()
 
@@ -170,17 +171,15 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.product-list-page-wrapper {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
 .product-list-page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 16px 40px;
-}
-
-.header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
 }
 
 .filter-card {

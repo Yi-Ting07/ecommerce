@@ -1,9 +1,8 @@
 <template>
-  <div class="news-list-page">
-    <div class="header-row">
-      <h1>最新消息</h1>
-      <router-link to="/">← 回首頁</router-link>
-    </div>
+  <div class="news-list-wrapper">
+    <NavBar />
+    <div class="news-list-page">
+    <h1 class="page-heading">最新消息</h1>
 
     <!-- 載入中 Skeleton -->
     <el-skeleton :loading="loading" animated :count="3">
@@ -67,6 +66,7 @@
         <el-button @click="detailVisible = false">關閉</el-button>
       </template>
     </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -74,6 +74,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
+import NavBar from '../../components/NavBar.vue'
 
 const loading = ref(false)
 const newsList = ref([])
@@ -129,22 +130,20 @@ onMounted(() => fetchNews())
 </script>
 
 <style scoped>
+.news-list-wrapper {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
 .news-list-page {
   max-width: 800px;
   margin: 0 auto;
   padding: 32px 16px;
 }
 
-.header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.header-row h1 {
-  margin: 0;
+.page-heading {
   font-size: 1.8rem;
+  margin: 0 0 24px;
 }
 
 .news-card {

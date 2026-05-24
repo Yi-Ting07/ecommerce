@@ -1,21 +1,6 @@
 <template>
   <div class="order-detail-page">
-    <!-- 導覽列 -->
-    <header class="page-header">
-      <nav class="nav-bar">
-        <div class="nav-brand">🛒 E-Commerce</div>
-        <div class="nav-links">
-          <router-link to="/">首頁</router-link>
-          <router-link to="/products">商品</router-link>
-          <router-link to="/cart">購物車</router-link>
-          <router-link to="/orders">我的訂單</router-link>
-          <router-link to="/profile">個人中心</router-link>
-          <router-link v-if="authStore.isAdmin" to="/admin">後台管理</router-link>
-          <span class="nav-user">{{ authStore.username }}</span>
-          <el-button type="danger" size="small" @click="handleLogout">登出</el-button>
-        </div>
-      </nav>
-    </header>
+    <NavBar />
 
     <main class="page-content">
       <!-- 返回按鈕 -->
@@ -121,6 +106,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../api'
+import NavBar from '../../components/NavBar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -195,64 +181,10 @@ async function handleCancel() {
   }
 }
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
-}
-
 onMounted(fetchOrder)
 </script>
 
 <style scoped>
-/* === 導覽列 === */
-.page-header {
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nav-bar {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-brand {
-  font-size: 20px;
-  font-weight: bold;
-  color: #409eff;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: #606266;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.nav-links a:hover,
-.nav-links a.router-link-active {
-  color: #409eff;
-}
-
-.nav-user {
-  font-size: 14px;
-  color: #303133;
-  font-weight: 500;
-}
-
 /* === 主內容 === */
 .page-content {
   max-width: 900px;

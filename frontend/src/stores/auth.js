@@ -18,6 +18,25 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || '')
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
+  // 初始化時檢查 token 是否已過期，若過期則立即清除
+  if (token.value) {
+    try {
+      const payload = JSON.parse(atob(token.value.split('.')[1]))
+      if (payload.exp && Date.now() / 1000 > payload.exp) {
+        token.value = ''
+        user.value = null
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
+    } catch {
+      // token 格式異常，也清除
+      token.value = ''
+      user.value = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    }
+  }
+
   // 2FA 待驗狀態（登入但尚未完成 2FA 驗證）
   const pendingTwoFactor = ref(null) // { tempToken, method }
 

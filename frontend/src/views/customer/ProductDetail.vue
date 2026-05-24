@@ -1,6 +1,7 @@
 <template>
-  <div class="product-detail-page">
-    <router-link to="/products">← 回商品列表</router-link>
+  <div class="product-detail-wrapper">
+    <NavBar />
+    <div class="product-detail-page">
 
     <el-skeleton :loading="loading" animated>
       <template #template>
@@ -143,6 +144,7 @@
         </el-card>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -153,6 +155,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '../../stores/auth'
 import { useCartStore } from '../../stores/cart'
 import api from '../../api'
+import NavBar from '../../components/NavBar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -297,6 +300,11 @@ function formatDate(dateStr) {
 </script>
 
 <style scoped>
+.product-detail-wrapper {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
 .product-detail-page {
   max-width: 1100px;
   margin: 0 auto;

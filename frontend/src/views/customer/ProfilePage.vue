@@ -1,20 +1,6 @@
 <template>
   <div class="profile-page">
-    <!-- 導覽列 -->
-    <header class="page-header">
-      <nav class="nav-bar">
-        <div class="nav-brand">🛒 E-Commerce</div>
-        <div class="nav-links">
-          <router-link to="/">首頁</router-link>
-          <router-link to="/products">商品</router-link>
-          <router-link to="/cart">購物車</router-link>
-          <router-link to="/orders">我的訂單</router-link>
-          <router-link v-if="authStore.isAdmin" to="/admin">後台管理</router-link>
-          <span class="nav-user">{{ authStore.username }}</span>
-          <el-button type="danger" size="small" @click="handleLogout">登出</el-button>
-        </div>
-      </nav>
-    </header>
+    <NavBar />
 
     <main class="page-content">
       <h1 class="page-title">👤 個人中心</h1>
@@ -245,6 +231,7 @@ import { User, Lock, Key } from '@element-plus/icons-vue'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../api'
 import QRCode from 'qrcode'
+import NavBar from '../../components/NavBar.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -392,11 +379,6 @@ function formatDate(dateStr) {
   })
 }
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
-}
-
 // ===== 雙重驗證（2FA）管理 =====
 const loadingTwoFactor = ref(false)
 const twoFactorStatus = ref(null) // { enabled, method }
@@ -542,53 +524,6 @@ onMounted(() => {
 .profile-page {
   min-height: 100vh;
   background: #f5f7fa;
-}
-
-.page-header {
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nav-bar {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-brand {
-  font-size: 20px;
-  font-weight: 700;
-  color: #409eff;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: #606266;
-  font-size: 14px;
-}
-
-.nav-links a:hover,
-.nav-links a.router-link-active {
-  color: #409eff;
-}
-
-.nav-user {
-  font-size: 14px;
-  color: #409eff;
-  font-weight: 600;
 }
 
 .page-content {
