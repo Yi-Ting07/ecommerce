@@ -60,6 +60,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/checkout',
+    name: 'Checkout',
+    component: () => import('../views/customer/CheckoutPage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/orders',
     name: 'Orders',
     component: () => import('../views/customer/OrderList.vue'),
@@ -69,6 +75,12 @@ const routes = [
     path: '/orders/:id',
     name: 'OrderDetail',
     component: () => import('../views/customer/OrderDetail.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/order-complete/:id',
+    name: 'OrderComplete',
+    component: () => import('../views/customer/OrderCompletePage.vue'),
     meta: { requiresAuth: true }
   },
   {

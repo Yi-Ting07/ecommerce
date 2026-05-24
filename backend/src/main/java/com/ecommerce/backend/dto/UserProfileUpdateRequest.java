@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size;
 
 /**
  * 會員更新個人資料請求
- *
- * @param username 暱稱（必填，2~50字）
- * @param email    電子郵件（必填，合法格式）
  */
 public record UserProfileUpdateRequest(
 
@@ -18,6 +15,14 @@ public record UserProfileUpdateRequest(
 
         @NotBlank(message = "Email 不能為空")
         @Email(message = "請輸入合法的 Email 格式")
-        String email
+        String email,
+
+        // 聯絡電話（含國碼，可選填）
+        @Size(max = 30, message = "電話不超過 30 字元")
+        String phone,
+
+        // 常用地址（可選填）
+        @Size(max = 300, message = "地址不超過 300 字元")
+        String address
 ) {
 }

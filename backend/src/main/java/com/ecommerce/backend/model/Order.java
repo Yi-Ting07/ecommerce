@@ -46,9 +46,48 @@ public class Order {
     @Column(nullable = false, length = 20)
     private OrderStatus status;
 
-    // 收貨地址
-    @Column(nullable = false, length = 300)
+    // 收貨地址（舊欄位，保留相容性，宅配改用 recipientAddress）
+    @Column(length = 300)
     private String shippingAddress;
+
+    // ===== 訂購人資訊 =====
+    @Column(length = 50)
+    private String ordererName;
+
+    @Column(length = 30)
+    private String ordererPhone;
+
+    @Column(length = 300)
+    private String ordererAddress;
+
+    // ===== 收貨人資訊 =====
+    @Column(length = 50)
+    private String recipientName;
+
+    @Column(length = 30)
+    private String recipientPhone;
+
+    // ===== 送貨方式 =====
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private DeliveryMethod deliveryMethod;
+
+    // 收貨地址（宅配用）
+    @Column(length = 300)
+    private String recipientAddress;
+
+    // 超商門市名稱（超商取貨用）
+    @Column(length = 100)
+    private String storeName;
+
+    // 超商門市店號（超商取貨用）
+    @Column(length = 20)
+    private String storeCode;
+
+    // ===== 付款方式 =====
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PaymentMethod paymentMethod;
 
     // 一個訂單包含多個明細（CascadeType.ALL = 刪除訂單時也刪明細）
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

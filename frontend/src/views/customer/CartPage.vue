@@ -3,7 +3,14 @@
     <NavBar />
 
     <main class="page-content">
-      <h1 class="page-title">🛒 我的購物車</h1>
+      <div class="steps-bar">
+        <el-steps :active="0" finish-status="success" align-center>
+          <el-step title="確認訂單" />
+          <el-step title="填寫資料" />
+          <el-step title="訂單完成" />
+        </el-steps>
+      </div>
+      <h1 class="page-title">確認訂單</h1>
 
       <!-- 載入中 -->
       <div v-if="cartStore.loading" class="loading-center">
@@ -96,28 +103,13 @@
 
             <el-divider />
 
-            <!-- 收貨地址 -->
-            <div class="address-section">
-              <div class="address-label">收貨地址 <span class="required">*</span></div>
-              <el-input
-                v-model="shippingAddress"
-                type="textarea"
-                :rows="3"
-                placeholder="請輸入完整收貨地址"
-                maxlength="300"
-                show-word-limit
-              />
-            </div>
-
             <el-button
               type="primary"
               size="large"
               class="checkout-btn"
-              :loading="checkingOut"
-              :disabled="!shippingAddress.trim()"
-              @click="handleCheckout"
+              @click="$router.push('/checkout')"
             >
-              立即結帳
+              前往結帳
             </el-button>
           </el-card>
         </div>
@@ -140,8 +132,6 @@ const authStore = useAuthStore()
 const cartStore = useCartStore()
 const router = useRouter()
 
-const shippingAddress = ref('')
-const checkingOut = ref(false)
 const updatingId = ref(null)
 const deletingId = ref(null)
 
@@ -201,27 +191,6 @@ async function handleClearCart() {
   }
 }
 
-async function handleCheckout() {
-  if (!shippingAddress.value.trim()) {
-    ElMessage.warning('請填寫收貨地址')
-    return
-  }
-  checkingOut.value = true
-  try {
-    const response = await api.post('/orders/checkout', {
-      shippingAddress: shippingAddress.value.trim()
-    })
-    cartStore.reset()
-    ElMessage.success('結帳成功！訂單已建立，正在跳轉至訂單詳情...')
-    // 結帳成功後直接跳轉到該筆訂單的詳情頁
-    router.push(`/orders/${response.data.id}`)
-  } catch (error) {
-    ElMessage.error(error.response?.data?.message || '結帳失敗，請稍後再試')
-  } finally {
-    checkingOut.value = false
-  }
-}
-
 function handleLogout() {
   authStore.logout()
   cartStore.reset()
@@ -235,6 +204,7 @@ function handleLogout() {
   background: #f5f7fa;
 }
 .page-content { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
+.steps-bar { margin-bottom: 32px; padding: 20px 0; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
 .page-title { font-size: 24px; margin-bottom: 24px; }
 .loading-center { padding: 40px 0; }
 .cart-layout { display: flex; gap: 24px; align-items: flex-start; }

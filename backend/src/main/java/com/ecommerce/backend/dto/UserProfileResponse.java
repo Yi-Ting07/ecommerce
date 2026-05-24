@@ -10,6 +10,8 @@ public record UserProfileResponse(
         String username,
         String email,
         String role,
+        String phone,
+        String address,
         LocalDateTime createdAt
 ) {
 }

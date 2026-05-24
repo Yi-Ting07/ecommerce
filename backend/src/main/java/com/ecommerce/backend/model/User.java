@@ -58,6 +58,14 @@ public class User {
     @Column(length = 20)
     private String smsPhone;
 
+    // 會員聯絡電話（含國碼，格式：+886912345678）
+    @Column(length = 30)
+    private String phone;
+
+    // 會員常用地址
+    @Column(length = 300)
+    private String address;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 }

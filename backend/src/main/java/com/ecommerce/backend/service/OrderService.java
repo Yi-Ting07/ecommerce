@@ -4,6 +4,8 @@ import com.ecommerce.backend.dto.CheckoutRequest;
 import com.ecommerce.backend.dto.OrderItemResponse;
 import com.ecommerce.backend.dto.OrderResponse;
 import com.ecommerce.backend.dto.OrderStatusUpdateRequest;
+import com.ecommerce.backend.dto.UserAddressRequest;
+import com.ecommerce.backend.dto.UserStoreRequest;
 import com.ecommerce.backend.model.*;
 import com.ecommerce.backend.repository.CartItemRepository;
 import com.ecommerce.backend.repository.OrderRepository;
@@ -43,15 +45,21 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final CartService cartService;
+    private final UserAddressService userAddressService;
+    private final UserStoreService userStoreService;
 
     public OrderService(OrderRepository orderRepository,
                         CartItemRepository cartItemRepository,
                         ProductRepository productRepository,
-                        CartService cartService) {
+                        CartService cartService,
+                        UserAddressService userAddressService,
+                        UserStoreService userStoreService) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.cartService = cartService;
+        this.userAddressService = userAddressService;
+        this.userStoreService = userStoreService;
     }
 
     // ===========================
@@ -61,14 +69,27 @@ public class OrderService {
     public OrderResponse checkout(String username, CheckoutRequest request) {
         User user = cartService.findUser(username);
 
+        // 驗證條件式必填欄位
+        if (request.deliveryMethod() == DeliveryMethod.HOME_DELIVERY) {
+            if (request.recipientAddress() == null || request.recipientAddress().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "宅配需填寫收貨地址");
+            }
+        } else {
+            if (request.storeName() == null || request.storeName().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "超商取貨需填寫門市名稱");
+            }
+            if (request.storeCode() == null || request.storeCode().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "超商取貨需填寫門市店號");
+            }
+        }
+
         // 1. 取得購物車
         List<CartItem> cartItems = cartItemRepository.findByUserIdOrderByCreatedAtAsc(user.getId());
-
         if (cartItems.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "購物車是空的");
         }
 
-        // 2. 驗證庫存（先全部驗證，不要一半成功一半失敗）
+        // 2. 驗證庫存
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
             if (!product.isActive()) {
@@ -93,7 +114,16 @@ public class OrderService {
                 .user(user)
                 .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
-                .shippingAddress(request.shippingAddress())
+                .ordererName(request.ordererName())
+                .ordererPhone(request.ordererPhone())
+                .ordererAddress(request.ordererAddress())
+                .recipientName(request.recipientName())
+                .recipientPhone(request.recipientPhone())
+                .deliveryMethod(request.deliveryMethod())
+                .recipientAddress(request.recipientAddress())
+                .storeName(request.storeName())
+                .storeCode(request.storeCode())
+                .paymentMethod(request.paymentMethod())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -103,14 +133,14 @@ public class OrderService {
                 .map(cartItem -> OrderItem.builder()
                         .order(order)
                         .product(cartItem.getProduct())
-                        .productName(cartItem.getProduct().getName())   // 快照名稱
-                        .price(cartItem.getProduct().getPrice())        // 快照價格
+                        .productName(cartItem.getProduct().getName())
+                        .price(cartItem.getProduct().getPrice())
                         .quantity(cartItem.getQuantity())
                         .build())
                 .toList();
 
         order.getItems().addAll(orderItems);
-        orderRepository.save(order); // Cascade 也會儲存 OrderItem
+        orderRepository.save(order);
 
         // 6. 扣減庫存
         for (CartItem cartItem : cartItems) {
@@ -121,6 +151,20 @@ public class OrderService {
 
         // 7. 清空購物車
         cartItemRepository.deleteByUserId(user.getId());
+
+        // 8. 若勾選「儲存至常用地址」，自動存入
+        if (request.saveAddress() && request.deliveryMethod() == DeliveryMethod.HOME_DELIVERY) {
+            userAddressService.addAddress(username, new UserAddressRequest(
+                    "常用地址", request.recipientName(), request.recipientPhone(), request.recipientAddress()
+            ));
+        }
+
+        // 9. 若勾選「儲存至常用門市」，自動存入
+        if (request.saveStore() && request.deliveryMethod() != DeliveryMethod.HOME_DELIVERY) {
+            userStoreService.addStore(username, new UserStoreRequest(
+                    request.deliveryMethod(), request.storeName(), request.storeCode()
+            ));
+        }
 
         return toResponse(order);
     }
@@ -280,13 +324,26 @@ public class OrderService {
                 ))
                 .toList();
 
+        String deliveryLabel = order.getDeliveryMethod() != null
+                ? deliveryMethodLabel(order.getDeliveryMethod()) : "";
+
         return new OrderResponse(
                 order.getId(),
                 order.getUser().getUsername(),
                 order.getTotalAmount(),
                 order.getStatus().name(),
                 statusLabel(order.getStatus()),
-                order.getShippingAddress(),
+                order.getOrdererName(),
+                order.getOrdererPhone(),
+                order.getOrdererAddress(),
+                order.getRecipientName(),
+                order.getRecipientPhone(),
+                order.getDeliveryMethod() != null ? order.getDeliveryMethod().name() : null,
+                deliveryLabel,
+                order.getRecipientAddress(),
+                order.getStoreName(),
+                order.getStoreCode(),
+                order.getPaymentMethod() != null ? order.getPaymentMethod().name() : null,
                 itemResponses,
                 order.getCreatedAt(),
                 order.getUpdatedAt()
@@ -300,6 +357,14 @@ public class OrderService {
             case SHIPPED -> "已出貨";
             case DELIVERED -> "已完成";
             case CANCELLED -> "已取消";
+        };
+    }
+
+    private String deliveryMethodLabel(DeliveryMethod method) {
+        return switch (method) {
+            case HOME_DELIVERY -> "宅配";
+            case FAMILY_MART -> "全家超商取貨";
+            case SEVEN_ELEVEN -> "7-11 超商取貨";
         };
     }
 }

@@ -6,17 +6,35 @@ import java.util.List;
 
 /**
  * 訂單回應 DTO
- *
- * 包含訂單基本資訊和所有明細項目。
  */
 public record OrderResponse(
         Long id,
-        String username,          // 下單的使用者名稱（管理員用）
+        String username,
         BigDecimal totalAmount,
-        String status,            // "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"
-        String statusLabel,       // 中文標籤，例如 "待確認"
-        String shippingAddress,
+        String status,
+        String statusLabel,
+
+        // 訂購人資訊
+        String ordererName,
+        String ordererPhone,
+        String ordererAddress,
+
+        // 收貨人資訊
+        String recipientName,
+        String recipientPhone,
+
+        // 送貨方式
+        String deliveryMethod,
+        String deliveryMethodLabel,
+        String recipientAddress,   // 宅配用
+        String storeName,          // 超商用
+        String storeCode,          // 超商用
+
+        // 付款方式
+        String paymentMethod,
+
         List<OrderItemResponse> items,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}
+

@@ -41,14 +41,34 @@
             <el-descriptions-item label="最後更新">
               {{ formatDate(order.updatedAt) }}
             </el-descriptions-item>
-            <el-descriptions-item label="收貨地址" :span="2">
-              {{ order.shippingAddress }}
+
+            <!-- 訂購人 -->
+            <el-descriptions-item label="訂購人姓名">{{ order.ordererName || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="訂購人電話">{{ order.ordererPhone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="訂購人地址" :span="2">{{ order.ordererAddress || '-' }}</el-descriptions-item>
+
+            <!-- 收貨人 -->
+            <el-descriptions-item label="收貨人姓名">{{ order.recipientName || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="收貨人電話">{{ order.recipientPhone || '-' }}</el-descriptions-item>
+
+            <!-- 送貨方式 -->
+            <el-descriptions-item label="送貨方式" :span="2">
+              <el-tag :type="deliveryTagType(order.deliveryMethod)">{{ order.deliveryMethodLabel || '-' }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item v-if="order.deliveryMethod === 'HOME_DELIVERY'" label="收貨地址" :span="2">
+              {{ order.recipientAddress || '-' }}
+            </el-descriptions-item>
+            <template v-if="order.deliveryMethod === 'FAMILY_MART' || order.deliveryMethod === 'SEVEN_ELEVEN'">
+              <el-descriptions-item label="門市名稱">{{ order.storeName || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="門市店號">{{ order.storeCode || '-' }}</el-descriptions-item>
+            </template>
+
+            <!-- 付款 & 金額 -->
+            <el-descriptions-item label="付款方式">
+              <el-tag type="info">模擬付款（信用卡）</el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="訂單總額">
               <strong class="total-price">{{ formatCurrency(order.totalAmount) }}</strong>
-            </el-descriptions-item>
-            <el-descriptions-item label="訂單狀態">
-              <el-tag :type="statusTagType(order.status)">{{ order.statusLabel }}</el-tag>
             </el-descriptions-item>
           </el-descriptions>
         </el-card>
@@ -144,6 +164,13 @@ function statusTagType(status) {
     CANCELLED: 'info'
   }
   return map[status] || ''
+}
+
+function deliveryTagType(method) {
+  if (method === 'HOME_DELIVERY') return 'primary'
+  if (method === 'FAMILY_MART') return 'success'
+  if (method === 'SEVEN_ELEVEN') return 'danger'
+  return ''
 }
 
 async function fetchOrder() {

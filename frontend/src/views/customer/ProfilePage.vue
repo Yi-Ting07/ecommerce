@@ -33,6 +33,22 @@
                 <el-input v-model="profileForm.email" placeholder="請輸入 Email" />
               </el-form-item>
 
+              <el-form-item label="聯絡手機號碼">
+                <div class="phone-row">
+                  <el-select v-model="profileForm.countryCode" class="country-code-select" filterable>
+                    <el-option v-for="c in countryCodes" :key="c.code" :value="c.code"
+                      :label="`${c.flag} ${c.code}`">
+                      <span>{{ c.flag }} {{ c.name }} {{ c.code }}</span>
+                    </el-option>
+                  </el-select>
+                  <el-input v-model="profileForm.phoneNum" placeholder="912345678" maxlength="20" class="phone-num-input" />
+                </div>
+              </el-form-item>
+
+              <el-form-item label="常用地址">
+                <el-input v-model="profileForm.address" placeholder="請輸入常用地址" maxlength="300" />
+              </el-form-item>
+
               <el-form-item label="角色">
                 <el-tag :type="profileData?.role === 'ROLE_ADMIN' ? 'danger' : 'success'">
                   {{ profileData?.role === 'ROLE_ADMIN' ? '管理員' : '一般會員' }}
@@ -109,6 +125,38 @@
                 </el-button>
               </el-form-item>
             </el-form>
+          </el-card>
+        </el-col>
+      </el-row>
+
+      <!-- 常用地址 & 門市管理入口 -->
+      <el-row :gutter="16" style="margin-bottom: 24px;">
+        <el-col :xs="24" :sm="12">
+          <el-card class="profile-card" shadow="hover" style="margin-bottom: 0;">
+            <div class="manage-entry">
+              <div class="manage-entry-info">
+                <span class="manage-entry-icon">📍</span>
+                <div>
+                  <div class="manage-entry-title">常用收貨地址</div>
+                  <div class="manage-entry-count">已儲存 {{ savedAddresses.length }} 筆</div>
+                </div>
+              </div>
+              <el-button type="primary" plain @click="manageAddressVisible = true">管理</el-button>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-card class="profile-card" shadow="hover" style="margin-bottom: 0;">
+            <div class="manage-entry">
+              <div class="manage-entry-info">
+                <span class="manage-entry-icon">🏪</span>
+                <div>
+                  <div class="manage-entry-title">常用超商門市</div>
+                  <div class="manage-entry-count">已儲存 {{ savedStoresCombined.length }} 筆</div>
+                </div>
+              </div>
+              <el-button type="primary" plain @click="manageStoreVisible = true">管理</el-button>
+            </div>
           </el-card>
         </el-col>
       </el-row>
@@ -220,11 +268,115 @@
         <el-button type="primary" :loading="savingSms" @click="handleConfirmSms">確認啟用</el-button>
       </template>
     </el-dialog>
+
+    <!-- 管理常用地址 Dialog -->
+    <el-dialog v-model="manageAddressVisible" title="📍 常用收貨地址管理" width="580px">
+      <div style="margin-bottom: 16px; text-align: right;">
+        <el-button type="primary" @click="openAddressForm(null)">+ 新增地址</el-button>
+      </div>
+      <el-skeleton v-if="loadingAddresses" :rows="3" animated />
+      <el-empty v-else-if="savedAddresses.length === 0" description="尚無常用地址" />
+      <div v-else class="saved-list">
+        <div v-for="addr in savedAddresses" :key="addr.id" class="saved-item">
+          <div class="saved-item-info">
+            <el-tag size="small">{{ addr.label }}</el-tag>
+            <span class="saved-name">{{ addr.recipientName }}</span>
+            <span class="saved-phone">{{ addr.recipientPhone }}</span>
+            <span class="saved-addr">{{ addr.address }}</span>
+          </div>
+          <div class="saved-item-actions">
+            <el-button type="primary" link size="small" @click="openAddressForm(addr)">編輯</el-button>
+            <el-button type="danger" link size="small" @click="deleteAddress(addr.id)">刪除</el-button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 管理常用門市 Dialog -->
+    <el-dialog v-model="manageStoreVisible" title="🏪 常用超商門市管理" width="540px">
+      <div style="margin-bottom: 16px; text-align: right;">
+        <el-button type="primary" @click="openStoreForm(null)">+ 新增門市</el-button>
+      </div>
+      <el-skeleton v-if="loadingStores" :rows="3" animated />
+      <el-empty v-else-if="savedStoresCombined.length === 0" description="尚無常用門市" />
+      <div v-else class="saved-list">
+        <div v-for="store in savedStoresCombined" :key="store.id" class="saved-item">
+          <div class="saved-item-info">
+            <el-tag size="small" :type="store.storeType === 'FAMILY_MART' ? 'success' : 'danger'">
+              {{ store.storeTypeLabel }}
+            </el-tag>
+            <span class="saved-name">{{ store.storeName }}</span>
+            <span class="saved-phone">店號：{{ store.storeCode }}</span>
+          </div>
+          <div class="saved-item-actions">
+            <el-button type="primary" link size="small" @click="openStoreForm(store)">編輯</el-button>
+            <el-button type="danger" link size="small" @click="deleteStore(store.id)">刪除</el-button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 新增/編輯常用地址 Dialog -->
+    <el-dialog v-model="addressFormVisible" :title="editingAddressId ? '編輯常用地址' : '新增常用地址'" width="460px" append-to-body>
+      <el-form :model="newAddress" label-position="top">
+        <el-form-item label="標籤（如：家、公司）">
+          <el-input v-model="newAddress.label" placeholder="家" maxlength="30" />
+        </el-form-item>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="收貨人姓名">
+              <el-input v-model="newAddress.recipientName" placeholder="請輸入姓名" maxlength="50" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="收貨人手機">
+              <div class="phone-row">
+                <el-select v-model="newAddress.countryCode" class="country-code-select-sm" filterable>
+                  <el-option v-for="c in countryCodes" :key="c.code" :value="c.code" :label="`${c.flag} ${c.code}`">
+                    <span>{{ c.flag }} {{ c.name }} {{ c.code }}</span>
+                  </el-option>
+                </el-select>
+                <el-input v-model="newAddress.phoneNum" placeholder="912345678" maxlength="20" class="phone-num-input" />
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="地址">
+          <el-input v-model="newAddress.address" placeholder="請輸入完整地址" maxlength="300" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addressFormVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingAddress" @click="handleSaveAddress">儲存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 新增/編輯常用門市 Dialog -->
+    <el-dialog v-model="storeFormVisible" :title="editingStoreId ? '編輯常用門市' : '新增常用門市'" width="400px" append-to-body>
+      <el-form :model="newStore" label-position="top">
+        <el-form-item label="超商類型">
+          <el-radio-group v-model="newStore.storeType">
+            <el-radio value="FAMILY_MART">🟢 全家</el-radio>
+            <el-radio value="SEVEN_ELEVEN">🔴 7-11</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="門市名稱">
+          <el-input v-model="newStore.storeName" placeholder="例：台北信義門市" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="門市店號">
+          <el-input v-model="newStore.storeCode" placeholder="例：123456" maxlength="20" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="storeFormVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingStore" @click="handleSaveStore">儲存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, reactive } from 'vue'
+import { onMounted, ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Lock, Key } from '@element-plus/icons-vue'
@@ -244,8 +396,32 @@ const profileFormRef = ref(null)
 
 const profileForm = reactive({
   username: '',
-  email: ''
+  email: '',
+  countryCode: '+886',
+  phoneNum: '',
+  address: ''
 })
+
+// 國碼清單
+const countryCodes = [
+  { code: '+886', name: '台灣', flag: '🇹🇼' },
+  { code: '+1',   name: '美國/加拿大', flag: '🇺🇸' },
+  { code: '+81',  name: '日本', flag: '🇯🇵' },
+  { code: '+82',  name: '南韓', flag: '🇰🇷' },
+  { code: '+86',  name: '中國', flag: '🇨🇳' },
+  { code: '+852', name: '香港', flag: '🇭🇰' },
+  { code: '+853', name: '澳門', flag: '🇲🇴' },
+  { code: '+65',  name: '新加坡', flag: '🇸🇬' },
+  { code: '+60',  name: '馬來西亞', flag: '🇲🇾' },
+  { code: '+63',  name: '菲律賓', flag: '🇵🇭' },
+  { code: '+66',  name: '泰國', flag: '🇹🇭' },
+  { code: '+84',  name: '越南', flag: '🇻🇳' },
+  { code: '+62',  name: '印尼', flag: '🇮🇩' },
+  { code: '+44',  name: '英國', flag: '🇬🇧' },
+  { code: '+49',  name: '德國', flag: '🇩🇪' },
+  { code: '+33',  name: '法國', flag: '🇫🇷' },
+  { code: '+61',  name: '澳洲', flag: '🇦🇺' },
+]
 
 const profileRules = {
   username: [
@@ -265,6 +441,16 @@ async function fetchProfile() {
     profileData.value = res.data
     profileForm.username = res.data.username
     profileForm.email = res.data.email
+    profileForm.address = res.data.address || ''
+    if (res.data.phone) {
+      const matched = countryCodes.find(c => res.data.phone.startsWith(c.code))
+      if (matched) {
+        profileForm.countryCode = matched.code
+        profileForm.phoneNum = res.data.phone.slice(matched.code.length)
+      } else {
+        profileForm.phoneNum = res.data.phone
+      }
+    }
   } catch (err) {
     ElMessage.error(err.response?.data?.message || '載入個人資料失敗')
   } finally {
@@ -278,9 +464,14 @@ async function handleUpdateProfile() {
 
   savingProfile.value = true
   try {
+    const phone = profileForm.phoneNum.trim()
+      ? profileForm.countryCode + profileForm.phoneNum.trim()
+      : null
     const res = await api.put('/user/profile', {
       username: profileForm.username,
-      email: profileForm.email
+      email: profileForm.email,
+      phone,
+      address: profileForm.address.trim() || null
     })
     profileData.value = res.data
 
@@ -517,7 +708,157 @@ function copySecret() {
 onMounted(() => {
   fetchProfile()
   fetchTwoFactorStatus()
+  loadSavedAddresses()
+  loadSavedAllStores()
 })
+
+// ===== 常用地址管理 =====
+const savedAddresses = ref([])
+const loadingAddresses = ref(false)
+const manageAddressVisible = ref(false)
+const addressFormVisible = ref(false)
+const savingAddress = ref(false)
+const editingAddressId = ref(null)
+const newAddress = reactive({
+  label: '家', recipientName: '', countryCode: '+886', phoneNum: '', address: ''
+})
+
+async function loadSavedAddresses() {
+  loadingAddresses.value = true
+  try {
+    const res = await api.get('/user/addresses')
+    savedAddresses.value = res.data
+  } catch { savedAddresses.value = [] } finally { loadingAddresses.value = false }
+}
+
+function openAddressForm(item = null) {
+  if (item) {
+    editingAddressId.value = item.id
+    newAddress.label = item.label
+    newAddress.recipientName = item.recipientName
+    const matched = countryCodes.find(c => item.recipientPhone.startsWith(c.code))
+    if (matched) {
+      newAddress.countryCode = matched.code
+      newAddress.phoneNum = item.recipientPhone.slice(matched.code.length)
+    } else {
+      newAddress.countryCode = '+886'
+      newAddress.phoneNum = item.recipientPhone
+    }
+    newAddress.address = item.address
+  } else {
+    editingAddressId.value = null
+    newAddress.label = '家'
+    newAddress.recipientName = ''
+    newAddress.countryCode = '+886'
+    newAddress.phoneNum = ''
+    newAddress.address = ''
+  }
+  addressFormVisible.value = true
+}
+
+async function handleSaveAddress() {
+  if (!newAddress.recipientName.trim()) return ElMessage.warning('請填寫收貨人姓名')
+  if (!newAddress.phoneNum.trim()) return ElMessage.warning('請填寫手機號碼')
+  if (!newAddress.address.trim()) return ElMessage.warning('請填寫地址')
+  savingAddress.value = true
+  try {
+    const payload = {
+      label: newAddress.label || '常用地址',
+      recipientName: newAddress.recipientName.trim(),
+      recipientPhone: newAddress.countryCode + newAddress.phoneNum.trim(),
+      address: newAddress.address.trim()
+    }
+    if (editingAddressId.value) {
+      await api.put(`/user/addresses/${editingAddressId.value}`, payload)
+      ElMessage.success('已更新常用地址')
+    } else {
+      await api.post('/user/addresses', payload)
+      ElMessage.success('已新增常用地址')
+    }
+    await loadSavedAddresses()
+    addressFormVisible.value = false
+    editingAddressId.value = null
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '操作失敗')
+  } finally { savingAddress.value = false }
+}
+
+async function deleteAddress(id) {
+  try {
+    await api.delete(`/user/addresses/${id}`)
+    await loadSavedAddresses()
+    ElMessage.success('已刪除')
+  } catch { ElMessage.error('刪除失敗') }
+}
+
+// ===== 常用門市管理 =====
+const savedStoresCombined = ref([])
+const loadingStores = ref(false)
+const manageStoreVisible = ref(false)
+const storeFormVisible = ref(false)
+const savingStore = ref(false)
+const editingStoreId = ref(null)
+const newStore = reactive({ storeType: 'FAMILY_MART', storeName: '', storeCode: '' })
+
+async function loadSavedAllStores() {
+  loadingStores.value = true
+  try {
+    const [fm, se] = await Promise.all([
+      api.get('/user/stores', { params: { type: 'FAMILY_MART' } }),
+      api.get('/user/stores', { params: { type: 'SEVEN_ELEVEN' } })
+    ])
+    savedStoresCombined.value = [...fm.data, ...se.data]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch { savedStoresCombined.value = [] } finally { loadingStores.value = false }
+}
+
+function openStoreForm(item = null) {
+  if (item) {
+    editingStoreId.value = item.id
+    newStore.storeType = item.storeType
+    newStore.storeName = item.storeName
+    newStore.storeCode = item.storeCode
+  } else {
+    editingStoreId.value = null
+    newStore.storeType = 'FAMILY_MART'
+    newStore.storeName = ''
+    newStore.storeCode = ''
+  }
+  storeFormVisible.value = true
+}
+
+async function handleSaveStore() {
+  if (!newStore.storeName.trim()) return ElMessage.warning('請填寫門市名稱')
+  if (!newStore.storeCode.trim()) return ElMessage.warning('請填寫門市店號')
+  savingStore.value = true
+  try {
+    const payload = {
+      storeType: newStore.storeType,
+      storeName: newStore.storeName.trim(),
+      storeCode: newStore.storeCode.trim()
+    }
+    if (editingStoreId.value) {
+      await api.put(`/user/stores/${editingStoreId.value}`, payload)
+      ElMessage.success('已更新常用門市')
+    } else {
+      await api.post('/user/stores', payload)
+      ElMessage.success('已新增常用門市')
+    }
+    await loadSavedAllStores()
+    storeFormVisible.value = false
+    editingStoreId.value = null
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '操作失敗')
+  } finally { savingStore.value = false }
+}
+
+async function deleteStore(id) {
+  try {
+    await api.delete(`/user/stores/${id}`)
+    await loadSavedAllStores()
+    ElMessage.success('已刪除')
+  } catch { ElMessage.error('刪除失敗') }
+}
 </script>
 
 <style scoped>
@@ -616,4 +957,29 @@ onMounted(() => {
   border-radius: 8px;
   margin-bottom: 4px;
 }
+
+/* 電話輸入 */
+.phone-row { display: flex; gap: 8px; }
+.country-code-select { width: 110px; flex-shrink: 0; }
+.country-code-select-sm { width: 100px; flex-shrink: 0; }
+.phone-num-input { flex: 1; }
+
+/* 常用地址 / 門市管理入口 */
+.manage-entry { display: flex; align-items: center; justify-content: space-between; }
+.manage-entry-info { display: flex; align-items: center; gap: 12px; }
+.manage-entry-icon { font-size: 28px; }
+.manage-entry-title { font-weight: 600; font-size: 15px; color: #303133; }
+.manage-entry-count { font-size: 12px; color: #909399; margin-top: 2px; }
+
+/* 常用地址 / 門市清單 */
+.saved-list { display: flex; flex-direction: column; gap: 10px; }
+.saved-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border: 1px solid #e4e7ed; border-radius: 8px;
+}
+.saved-item-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; flex-wrap: wrap; }
+.saved-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.saved-name { font-weight: 600; font-size: 14px; }
+.saved-phone { color: #606266; font-size: 13px; }
+.saved-addr { color: #909399; font-size: 13px; }
 </style>

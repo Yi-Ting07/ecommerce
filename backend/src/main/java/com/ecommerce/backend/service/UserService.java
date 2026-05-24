@@ -65,6 +65,8 @@ public class UserService {
 
         user.setUsername(request.username());
         user.setEmail(request.email());
+        user.setPhone(request.phone());
+        user.setAddress(request.address());
 
         return toResponse(userRepository.save(user));
     }
@@ -106,6 +108,8 @@ public class UserService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole().name(),
+                user.getPhone(),
+                user.getAddress(),
                 user.getCreatedAt()
         );
     }
